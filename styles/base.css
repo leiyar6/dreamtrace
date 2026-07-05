@@ -1,0 +1,336 @@
+/* ============================================================
+   梦迹 DreamTrace · base.css
+   设计令牌 / 重置 / 字体 / 手机外壳 / 状态栏 / 底部导航 / 动效
+   ============================================================ */
+
+:root {
+  /* 色彩令牌：奶白 + 紫色梦幻系 */
+  --bg: #FBF8F3;
+  --bg-soft: #F4EEFB;
+  --bg-deep: #EDE3FB;
+  --surface: #FFFFFF;
+  --surface-2: #FAF6FF;
+
+  --primary: #7B68EE;
+  --primary-soft: #9B8DF8;
+  --primary-deep: #5C4FD6;
+  --primary-tint: rgba(123, 104, 238, 0.10);
+
+  --accent-pink: #FFB4E1;
+  --accent-cyan: #6FE7DD;
+  --accent-star: #E0AAFF;
+  --accent-gold: #F6C178;
+
+  --ink: #2B2440;
+  --ink-soft: #5C5575;
+  --ink-mute: #938AB0;
+  --line: rgba(123, 104, 238, 0.14);
+  --line-soft: rgba(123, 104, 238, 0.08);
+
+  /* 圆角 */
+  --r-sm: 12px;
+  --r-md: 16px;
+  --r-lg: 22px;
+  --r-xl: 30px;
+  --r-pill: 999px;
+
+  /* 阴影 */
+  --shadow-soft: 0 6px 24px rgba(91, 79, 214, 0.08);
+  --shadow-card: 0 14px 40px rgba(91, 79, 214, 0.14);
+  --shadow-float: 0 20px 60px rgba(91, 79, 214, 0.22);
+  --shadow-glow: 0 0 24px rgba(155, 141, 248, 0.45);
+
+  /* 字体 */
+  --font-body: -apple-system, BlinkMacSystemFont, "PingFang SC", "SF Pro Display",
+    "Helvetica Neue", "Microsoft YaHei", sans-serif;
+  --font-serif: "Noto Serif SC", "Songti SC", "STSong", serif;
+
+  /* 尺寸 */
+  --shell-w: 390px;
+  --shell-h: 844px;
+  --nav-h: 84px;
+  --safe-bottom: 22px;
+}
+
+/* ---------- 重置 ---------- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body { height: 100%; }
+
+body {
+  font-family: var(--font-body);
+  color: var(--ink);
+  background: #f4eeff;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+a { color: inherit; text-decoration: none; }
+ul, ol { list-style: none; }
+img { display: block; max-width: 100%; }
+input, textarea { font: inherit; color: inherit; }
+
+::selection { background: var(--primary-tint); }
+
+/* ---------- 手机外壳（纯 CSS：box-shadow 多层叠加绘制边框，伪元素绘制灵动岛） ---------- */
+.phone-shell {
+  position: relative;
+  width: var(--shell-w);
+  height: var(--shell-h);
+  background: var(--bg);                 /* 奶油白色屏幕区域 */
+  border-radius: 48px;                    /* 四角大圆角 */
+  transform: scale(min(1, calc((100vh - 48px) / 844)));
+  transform-origin: center center;
+  /* 多层 box-shadow 绘制外壳边框（不使用 border）：
+     1) 深黑色实心扩展 = 机身外壳
+     2) 深灰色实心扩展 = 金属边框边缘（比 1 再多出少量宽度）
+     3) 大模糊半透明黑色投影 = 远距离悬浮投影
+     4) 小模糊半透明黑色投影 = 近距离悬浮投影 */
+  box-shadow:
+    0 0 0 8px #1a1a1a,
+    0 0 0 10px #4a4a4a,
+    0 50px 90px rgba(0, 0, 0, 0.32),
+    0 18px 40px rgba(0, 0, 0, 0.22);
+  overflow: hidden;                       /* 内部内容不超出屏幕区域 */
+  z-index: 2;
+  isolation: isolate;
+}
+
+/* 灵动岛：伪元素绘制，层级最高覆盖在内容之上 */
+.phone-shell::before {
+  content: "";
+  position: absolute;
+  top: 11px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 118px;
+  height: 32px;
+  background: #05030c;
+  border-radius: var(--r-pill);
+  z-index: 60;
+  pointer-events: none;
+}
+
+/* 状态栏（iOS 风格） */
+.status-bar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 48px;
+  padding: 0 24px 0 28px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding-bottom: 8px;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", var(--font-body);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  color: var(--ink);
+  z-index: 55;
+  pointer-events: none;
+}
+/* 日历 / AI 页面：状态栏背景匹配页面蓝紫色
+   全程不透明，避免透出底层奶油白导致分割线 */
+.status-bar.on-cal,
+.status-bar.on-ai {
+  background: linear-gradient(180deg, rgba(237,227,251,1) 0%, rgba(235,222,250,1) 50%, rgba(232,219,247,1) 100%);
+}
+/* 周公解梦页：状态栏背景匹配泛黄纸张 */
+.status-bar.on-zg {
+  background: linear-gradient(180deg, rgba(246,236,208,1) 0%, rgba(242,228,190,1) 50%, rgba(238,220,170,1) 100%);
+}
+.status-time { letter-spacing: 0.5px; }
+.status-icons {
+  display: flex; align-items: center; gap: 7px;
+  color: var(--ink);
+}
+.status-icons svg { display: block; }
+
+/* 主内容区：状态栏下方 → 屏幕底部（延伸到浮岛下方）
+   取消 padding-top，让页面背景直接顶到状态栏底部，消除横向分割线 */
+.screen {
+  position: absolute;
+  inset: 44px 0 0 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  padding: 0;
+}
+.screen::-webkit-scrollbar { width: 0; height: 0; }
+
+.page { padding: 14px 18px 110px; animation: pageIn 0.4s ease both; }
+
+@keyframes pageIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------- 底部导航（iOS 浮动浮岛） ---------- */
+.bottom-nav {
+  position: absolute;
+  left: 14px; right: 14px; bottom: 14px;
+  height: 62px;
+  padding: 0 4px;
+  display: flex;
+  align-items: stretch;
+  justify-content: space-around;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  border-radius: 999px;
+  box-shadow:
+    0 14px 40px rgba(91, 79, 214, 0.18),
+    0 4px 12px rgba(123, 104, 238, 0.1),
+    inset 0 1px 1px rgba(255, 255, 255, 0.6);
+  z-index: 50;
+}
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  color: var(--ink-mute);
+  transition: color 0.25s ease, transform 0.25s ease;
+  position: relative;
+}
+.nav-item .nav-ico { width: 24px; height: 24px; display: grid; place-items: center; transition: transform 0.3s ease; position: relative; z-index: 2; }
+.nav-item .nav-label { font-size: 10.5px; font-weight: 500; letter-spacing: 0.3px; position: relative; z-index: 2; transition: opacity 0.3s ease; }
+.nav-item.active { color: var(--primary-deep); }
+.nav-item.active .nav-ico { transform: translateY(-2px) scale(1.06); }
+/* 液态玻璃药丸：包裹整个图标 + 灵动感（苹果 iOS 风） */
+.nav-item.active::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 74px; height: 56px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(123,104,238,0.28), rgba(224,170,255,0.2));
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  border: 1px solid rgba(255,255,255,0.55);
+  box-shadow:
+    0 6px 18px rgba(123,104,238,0.2),
+    inset 0 1px 1px rgba(255,255,255,0.5);
+  z-index: 1;
+  pointer-events: none;
+  animation: navPillIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes navPillIn {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.7); }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+/* 中间 AI 按钮（与其他导航项统一样式） */
+.nav-item.nav-ai { position: relative; }
+@keyframes orbPulse {
+  0%,100% { box-shadow: 0 10px 24px rgba(123,104,238,0.5), inset 0 2px 6px rgba(255,255,255,0.5); }
+  50% { box-shadow: 0 14px 34px rgba(123,104,238,0.7), 0 0 30px rgba(224,170,255,0.5), inset 0 2px 6px rgba(255,255,255,0.6); }
+}
+
+/* ---------- 桌面外壳外氛围背景：轻盈梦幻晨雾感 ---------- */
+.ambient {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  background:
+    radial-gradient(1100px 760px at 72% -8%, #efe6ff, transparent 60%),
+    radial-gradient(1000px 700px at 8% 110%, #fdeef6, transparent 58%),
+    radial-gradient(900px 600px at 50% 50%, #f3edff, transparent 70%),
+    linear-gradient(160deg, #f7f2ff 0%, #fbf8f3 45%, #fdf3f8 100%);
+}
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(70px);
+  opacity: 0.55;
+  animation: drift 22s ease-in-out infinite;
+}
+.blob-a { width: 420px; height: 420px; background: #c9b8ff; top: 6%; left: 4%; }
+.blob-b { width: 360px; height: 360px; background: #ffc9e6; bottom: 4%; right: 6%; opacity: 0.45; animation-delay: -7s; }
+.blob-c { width: 280px; height: 280px; background: #ffe6b0; top: 42%; right: 28%; opacity: 0.3; animation-delay: -13s; }
+@keyframes drift {
+  0%,100% { transform: translate(0,0) scale(1); }
+  50% { transform: translate(30px,-26px) scale(1.08); }
+}
+
+/* ---------- 浮层根 ---------- */
+.overlay-root {
+  position: absolute;
+  inset: 0;
+  z-index: 80;
+  pointer-events: none;
+}
+.overlay-root > * { pointer-events: auto; }
+
+/* ---------- 通用工具 ---------- */
+.serif { font-family: var(--font-serif); }
+.muted { color: var(--ink-mute); }
+.soft { color: var(--ink-soft); }
+.row { display: flex; align-items: center; }
+.between { display: flex; align-items: center; justify-content: space-between; }
+.wrap { flex-wrap: wrap; }
+.gap-6 { gap: 6px; } .gap-8 { gap: 8px; } .gap-12 { gap: 12px; }
+.grow { flex: 1; min-width: 0; }
+.hide-scroll::-webkit-scrollbar { display: none; }
+.hide-scroll { scrollbar-width: none; }
+
+/* 渐变文字 */
+.grad-text {
+  background: linear-gradient(120deg, var(--primary-deep), var(--accent-star) 60%, var(--accent-pink));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* 段落标题 */
+.section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 22px 2px 12px;
+}
+.section-title h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: 0.4px;
+}
+.section-title .more {
+  font-size: 12px;
+  color: var(--ink-mute);
+  display: flex; align-items: center; gap: 2px;
+}
+
+/* 横向滚动条隐藏 + 内边距 */
+.h-scroll {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 4px 18px 8px;
+  margin: 0 -18px;
+  scroll-snap-type: x mandatory;
+}
+.h-scroll > * { flex: 0 0 auto; scroll-snap-align: start; }
+
+/* 安全的底部留白（被悬浮按钮遮挡时） */
+.pad-fab { padding-bottom: 120px; }
+
+/* 响应式：极小屏自适应缩放外壳 */
+/* 小屏仍保持居中手机框 + 周围留白氛围，不撑满视口 */
+@media (max-width: 430px) {
+  .phone-shell {
+    transform: scale(min(0.92, calc((100vh - 24px) / 844)));
+  }
+}
