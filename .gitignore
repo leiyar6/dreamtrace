@@ -32,3 +32,6 @@ dist-ssr
 .vercel-global
 .wrangler-config
 .gh-config
+
+# TRAE IDE 自动生成的设计文档
+.trae/
