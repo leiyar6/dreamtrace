@@ -28,3 +28,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+.vercel
+.vercel-global
+.wrangler-config
+.gh-config
