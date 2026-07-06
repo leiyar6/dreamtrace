@@ -175,7 +175,7 @@ export function render() {
         </div>
         <div class="tc-track" id="tcTrack">
           ${dreamsSlides().map((s) => `
-            <div class="tc-slide"${s.id ? ` data-act="open-record" data-id="${s.id}"` : ''}>
+            <div class="tc-slide">
               <img src="${s.src}" alt="${esc(s.title)}" loading="eager" decoding="async" onerror="this.onerror=null;this.src='${SLIDE_IMG_A}'"/>
               <div class="tc-cap">
                 ${s.date ? `<span class="tc-date">${formatSlideDate(s.date)}</span>` : ''}
