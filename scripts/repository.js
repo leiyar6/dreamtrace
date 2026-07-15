@@ -2,12 +2,38 @@
    repository.js — 业务数据操作（读写 store + 同步 state）
    ============================================================ */
 
-import { state, setState, todayStr } from './state.js';
+import { state, setState, todayStr, dateStr } from './state.js';
 import { store } from './store.js';
 import { seedUser, seedRecords, seedPosts } from './seed-data.js';
 import { moodPresets } from './seed-data.js';
 
 export { moodPresets };
+
+/* 种子记录的日期偏移映射（相对今天）
+   用于每次启动时重新对齐种子记录日期，确保"今天"始终有梦境预览 */
+const SEED_OFFSETS = {
+  r_001: 0, r_002: 0, r_003: -2, r_004: -4,
+  r_005: -5, r_006: -7, r_007: -9, r_008: -11, r_009: -1
+};
+
+/* 根据当前日期重新计算种子记录的 date 字段 */
+function realignSeedDates(records) {
+  const today = new Date();
+  let changed = false;
+  const aligned = records.map((r) => {
+    const offset = SEED_OFFSETS[r.id];
+    if (offset === undefined) return r;
+    const dt = new Date(today);
+    dt.setDate(dt.getDate() + offset);
+    const newDate = dateStr(dt);
+    if (r.date !== newDate) {
+      changed = true;
+      return { ...r, date: newDate };
+    }
+    return r;
+  });
+  return { aligned, changed };
+}
 
 /* ---------- 初始化（首次加载种子数据） ---------- */
 export function initData() {
@@ -29,6 +55,13 @@ export function initData() {
     if (user) {
       user = { ...user, avatarUrl: seedUser.avatarUrl, avatarSeed: seedUser.avatarSeed };
       store.setUser(user);
+    }
+  } else {
+    // 已播种：重新对齐种子记录日期，确保"今天"始终有梦境预览
+    const { aligned, changed } = realignSeedDates(records);
+    if (changed) {
+      records = aligned;
+      store.setRecords(records);
     }
   }
 
@@ -66,6 +99,18 @@ function refreshStats(user, records) {
   const reality = records.filter((r) => r.type === 'reality').length;
   const aiUsed = records.filter((r) => r.analysis).length;
   user.stats = { dreams, reality, aiUsed, total: records.length };
+  /* profile 展示数据：固定数值（模拟成长数据），缺失字段从 seedUser 补全 */
+  const sp = seedUser.profile;
+  user.profile = {
+    totalDreams: user.profile?.totalDreams ?? sp.totalDreams,
+    streakDays: user.profile?.streakDays ?? sp.streakDays,
+    aiAnalysisCount: user.profile?.aiAnalysisCount ?? sp.aiAnalysisCount,
+    communityLikes: user.profile?.communityLikes ?? sp.communityLikes,
+    monthlyDreamCount: user.profile?.monthlyDreamCount ?? sp.monthlyDreamCount,
+    monthlyDreamDays: user.profile?.monthlyDreamDays ?? sp.monthlyDreamDays,
+    commonSymbol: user.profile?.commonSymbol ?? sp.commonSymbol,
+    commonPerson: user.profile?.commonPerson ?? sp.commonPerson
+  };
   store.setUser(user);
 }
 

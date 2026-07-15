@@ -38,6 +38,58 @@ const FAB_ROUTES = new Set();
 let current = { name: 'home', params: [] };
 let fabEl = null;
 
+/* ---------- 图片自动重试 ----------
+   text-to-image API 首次返回占位图，需要轮询重试直到拿到真实图片
+   真实图片宽度 > 500px，占位图通常很小 */
+const RETRY_IMG_MAX = 20;
+const RETRY_IMG_INTERVAL = 2500;
+
+function setupImageRetry(root) {
+  const imgs = root.querySelectorAll('img[src*="text_to_image"]');
+  imgs.forEach((img) => {
+    if (img.dataset.retried) return;
+    img.dataset.retried = '1';
+    let attempt = 0;
+    const isRealImage = () => img.complete && img.naturalWidth > 150;
+    const tryLoad = () => {
+      if (isRealImage()) {
+        img.style.opacity = '1';
+        return;
+      }
+      attempt++;
+      if (attempt > RETRY_IMG_MAX) {
+        img.style.opacity = '1';
+        return;
+      }
+      const src = img.currentSrc || img.src;
+      const base = src.split('?_cb=')[0];
+      img.src = '';
+      setTimeout(() => {
+        img.src = base + '?_cb=' + Date.now() + '_' + attempt;
+      }, 120);
+      setTimeout(tryLoad, RETRY_IMG_INTERVAL);
+    };
+    img.style.opacity = '0';
+    img.style.transition = 'opacity 0.4s ease';
+    if (img.complete) {
+      if (isRealImage()) {
+        img.style.opacity = '1';
+      } else {
+        tryLoad();
+      }
+    } else {
+      img.addEventListener('load', () => {
+        if (isRealImage()) {
+          img.style.opacity = '1';
+        } else {
+          tryLoad();
+        }
+      }, { once: true });
+      img.addEventListener('error', () => tryLoad(), { once: true });
+    }
+  });
+}
+
 /* ---------- 渲染 ---------- */
 function renderPage(name, params = []) {
   const app = document.getElementById('app');
@@ -47,6 +99,7 @@ function renderPage(name, params = []) {
   const page = PAGES[name] || home;
   app.innerHTML = page.render(params);
   if (page.afterRender) page.afterRender(app);
+  setupImageRetry(app);
   current = { name, params, page };
   updateNav(name);
   updateFab(name);
@@ -518,9 +571,30 @@ function tickClock() {
   }
 }
 
+/* ---------- 预热所有图片 URL ----------
+   text-to-image API 首次访问会返回"正在生成中"占位图，
+   启动时用 fetch 触发后台生成，避免用户看到占位图 */
+function preloadImages() {
+  const s = getState();
+  const urls = new Set();
+  s.records.forEach((r) => { if (r.imageUrl) urls.add(r.imageUrl); });
+  s.posts.forEach((p) => {
+    if (p.imageUrl) urls.add(p.imageUrl);
+    if (p.avatarUrl) urls.add(p.avatarUrl);
+    (p.comments || []).forEach((c) => { if (c.avatarUrl) urls.add(c.avatarUrl); });
+  });
+  if (s.user?.avatarUrl) urls.add(s.user.avatarUrl);
+  urls.forEach((url) => {
+    const img = new Image();
+    img.referrerPolicy = 'no-referrer';
+    img.src = url;
+  });
+}
+
 /* ---------- 启动 ---------- */
 function init() {
   initData();
+  preloadImages();
   renderNav();
   buildFab();
   setState({ selectedDate: todayStr() });

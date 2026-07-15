@@ -67,6 +67,7 @@ body {
   align-items: center;
   justify-content: center;
   min-height: 100vh;
+  min-height: 100dvh;   /* 动态视口高度，随地址栏收缩/展开自适应 */
   overflow: hidden;
 }
 
@@ -85,7 +86,7 @@ input, textarea { font: inherit; color: inherit; }
   height: var(--shell-h);
   background: var(--bg);                 /* 奶油白色屏幕区域 */
   border-radius: 48px;                    /* 四角大圆角 */
-  transform: scale(min(1, calc((100vh - 48px) / 844)));
+  transform: scale(min(1, calc((100dvh - 48px) / 844)));
   transform-origin: center center;
   /* 多层 box-shadow 绘制外壳边框（不使用 border）：
      1) 深黑色实心扩展 = 机身外壳
@@ -331,6 +332,6 @@ input, textarea { font: inherit; color: inherit; }
 /* 小屏仍保持居中手机框 + 周围留白氛围，不撑满视口 */
 @media (max-width: 430px) {
   .phone-shell {
-    transform: scale(min(0.92, calc((100vh - 24px) / 844)));
+    transform: scale(min(0.92, calc((100dvh - 24px) / 844)));
   }
 }
