@@ -55,6 +55,12 @@
 /* ---------- 重置 ---------- */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* 锁定浅色模式：防止系统暗色模式下浏览器自动反转颜色 */
+:root {
+  color-scheme: light only;
+  supported-color-schemes: light;
+}
+
 html, body { height: 100%; }
 
 body {
